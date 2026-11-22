@@ -1,0 +1,148 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Ordo — Python automation demo · Cristian Casciani</title>
+<meta name="description" content="Ordo tidies a folder, reads PDF invoices into Excel and writes a report. Demo project by Cristian Casciani." />
+<style>
+:root { --bg: #0f1115; --panel: #161a21; --ink: #e8eaf0; --muted: #8b93a3; --line: #262b35; --accent: #7aa2ff; }
+* { box-sizing: border-box; }
+body { margin: 0; background: radial-gradient(1000px 500px at 80% -10%, #1d2740, transparent), var(--bg); color: var(--ink); font: 16px/1.6 Inter, system-ui, sans-serif; }
+.wrap { max-width: 1040px; margin: 0 auto; padding: 56px 22px 80px; }
+.top { display: flex; justify-content: space-between; align-items: center; gap: 1rem; }
+.lang { display: flex; gap: 2px; border: 1px solid var(--line); border-radius: 8px; padding: 2px; }
+.lang button { background: none; border: 0; color: var(--muted); font: inherit; font-size: .8rem; padding: 4px 10px; border-radius: 6px; cursor: pointer; }
+.lang button[aria-pressed='true'] { background: var(--panel); color: var(--ink); }
+.kicker { color: var(--accent); font-size: .78rem; letter-spacing: .2em; text-transform: uppercase; margin: 0 0 .6rem; }
+h1 { font-size: clamp(2.2rem, 5vw, 3.4rem); line-height: 1.05; margin: 0 0 1rem; letter-spacing: -.03em; }
+.lead { color: var(--muted); max-width: 60ch; margin: 0 0 2rem; font-size: 1.08rem; }
+.term { background: #0b0d11; border: 1px solid var(--line); border-radius: 14px; box-shadow: 0 30px 80px rgba(0,0,0,.45); overflow: hidden; }
+.term-bar { display: flex; align-items: center; gap: 7px; padding: 11px 14px; background: #12151b; border-bottom: 1px solid var(--line); }
+.term-bar i { width: 11px; height: 11px; border-radius: 50%; background: #3a3f4a; }
+.term-bar i:nth-child(1) { background: #ff5f57; } .term-bar i:nth-child(2) { background: #febc2e; } .term-bar i:nth-child(3) { background: #28c840; }
+.term-bar span { margin-left: 10px; color: var(--muted); font-size: .8rem; }
+.term-bar button { margin-left: auto; background: none; border: 1px solid var(--line); color: var(--muted); border-radius: 6px; padding: 2px 10px; font: inherit; font-size: .78rem; cursor: pointer; }
+.screen { margin: 0; padding: 18px 20px 22px; min-height: 560px; font: 13px/1.45 ui-monospace, 'JetBrains Mono', Menlo, Consolas, monospace; color: #d8dbe2; white-space: pre; overflow-x: auto; }
+.prompt { color: #7ee787; } .cmd { color: #fff; }
+.cursor { display: inline-block; width: .6em; height: 1.1em; background: #d8dbe2; vertical-align: -.2em; animation: blink 1s steps(1) infinite; }
+@keyframes blink { 50% { opacity: 0; } }
+.actions { display: flex; flex-wrap: wrap; gap: 12px; margin: 28px 0 56px; }
+.btn { display: inline-flex; align-items: center; gap: .4rem; padding: .75rem 1.2rem; border-radius: 10px; border: 1px solid var(--line); color: var(--ink); text-decoration: none; font-weight: 500; }
+.btn:hover { border-color: var(--accent); }
+.btn.primary { background: var(--accent); border-color: var(--accent); color: #0b0d11; }
+.grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; margin-bottom: 56px; }
+.feat { background: var(--panel); border: 1px solid var(--line); border-radius: 12px; padding: 18px; }
+.feat b { display: block; margin-bottom: .3rem; } .feat p { margin: 0; color: var(--muted); font-size: .92rem; }
+h2 { font-size: 1.5rem; letter-spacing: -.02em; margin: 0 0 1rem; }
+.shot { width: 100%; border-radius: 12px; border: 1px solid var(--line); display: block; }
+footer { color: var(--muted); font-size: .85rem; margin-top: 56px; }
+footer a { color: var(--ink); }
+@media (max-width: 800px) { .grid { grid-template-columns: 1fr 1fr; } .screen { font-size: 11px; min-height: 420px; } }
+</style>
+</head>
+<body>
+<main class="wrap">
+  <div class="top"><p class="kicker" data-i18n="kicker">Python automation · personal demo</p>
+    <div class="lang" role="group" aria-label="Language"><button type="button" data-lang="it">IT</button><button type="button" data-lang="en">EN</button></div></div>
+  <h1 data-i18n-html="h1">Ordo tidies a messy folder<br />and turns PDF invoices into Excel.</h1>
+  <p class="lead" data-i18n-html="lead">One command sorts 61 files into folders, sets duplicates aside, reads 10 supplier invoices (Italian and English),
+    renames them as <code>date_supplier_number.pdf</code>, flags the ones that need a human check and writes a report.
+    Below is a real run, replayed.</p>
+
+  <div class="term" aria-label="Terminal recording of ordo run">
+    <div class="term-bar"><i></i><i></i><i></i><span>~ — ordo</span><button type="button" id="replay" data-i18n="replay">↻ Replay</button></div>
+    <pre class="screen" id="screen"></pre>
+  </div>
+
+  <div class="actions">
+    <a class="btn primary" id="rep-html" href="report-en.html" data-i18n="open">Open the generated report ↗</a>
+    <a class="btn" id="rep-xlsx" href="report-en.xlsx" download data-i18n="excel">Download the Excel file</a>
+    <a class="btn" href="https://github.com/cristiancasciani/python-automation" data-i18n="code">Code on GitHub ↗</a>
+  </div>
+
+  <section class="grid">
+    <div class="feat"><b data-i18n="f1t">Organise</b><p data-i18n-html="f1">Files sorted by type (and month if you want). Duplicates found by content, not by name.</p></div>
+    <div class="feat"><b data-i18n="f2t">Rename</b><p data-i18n-html="f2">Bulk rename with patterns like <code>{date}_{name}</code> or <code>photo_{n:03}</code>, with a preview.</p></div>
+    <div class="feat"><b data-i18n="f3t">Read invoices</b><p data-i18n-html="f3">Supplier, number, date, VAT ID, net, VAT and total from PDFs. Totals are cross-checked.</p></div>
+    <div class="feat"><b data-i18n="f4t">Report &amp; undo</b><p data-i18n-html="f4">HTML + Excel report. Nothing changes without <code>--apply</code>, and <code>ordo undo</code> puts everything back.</p></div>
+  </section>
+
+  <h2 data-i18n="wint">Also with a window</h2>
+  <p class="lead" data-i18n="win">For people who never open a terminal: the same engine with a simple Tkinter interface — preview, apply, undo.</p>
+  <img class="shot" id="shot" src="gui-en.png" alt="Ordo window showing the invoices found in a folder" loading="lazy" />
+
+  <footer data-i18n-html="foot">Ordo is a demo project by <a href="https://cristiancasciani.github.io/">Cristian Casciani</a>.
+    The companies and invoices are made up. Python · pypdf · openpyxl · rich · Tkinter.</footer>
+</main>
+<script>
+const LINES = {"it": ["<span style=\"color: #7f7f7f; text-decoration-color: #7f7f7f\">\u256d\u2500\u2500\u2500 Ordo \u2500\u2500\u2500\u2500\u256e</span>", "<span style=\"color: #7f7f7f; text-decoration-color: #7f7f7f\">\u2502</span> <span style=\"font-weight: bold\">~/Downloads</span> <span style=\"color: #7f7f7f; text-decoration-color: #7f7f7f\">\u2502</span>", "<span style=\"color: #7f7f7f; text-decoration-color: #7f7f7f\">\u2570\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u256f</span>", "<span style=\"font-weight: bold\">Immagini         </span> 22 <span style=\"color: #7f7f7f; text-decoration-color: #7f7f7f\"> \u2192 Immagini/        </span>", "<span style=\"font-weight: bold\">Fatture          </span> 10 <span style=\"color: #7f7f7f; text-decoration-color: #7f7f7f\"> \u2192 Fatture/         </span>", "<span style=\"font-weight: bold\">Documenti        </span>  8 <span style=\"color: #7f7f7f; text-decoration-color: #7f7f7f\"> \u2192 Documenti/       </span>", "<span style=\"font-weight: bold\">Duplicati        </span>  5 <span style=\"color: #7f7f7f; text-decoration-color: #7f7f7f\"> \u2192 Duplicati/       </span>", "<span style=\"font-weight: bold\">Fogli di calcolo </span>  3 <span style=\"color: #7f7f7f; text-decoration-color: #7f7f7f\"> \u2192 Fogli di calcolo/</span>", "<span style=\"font-weight: bold\">Codice           </span>  3 <span style=\"color: #7f7f7f; text-decoration-color: #7f7f7f\"> \u2192 Codice/          </span>", "<span style=\"font-weight: bold\">Installer        </span>  2 <span style=\"color: #7f7f7f; text-decoration-color: #7f7f7f\"> \u2192 Installer/       </span>", "<span style=\"font-weight: bold\">Altro            </span>  2 <span style=\"color: #7f7f7f; text-decoration-color: #7f7f7f\"> \u2192 Altro/           </span>", "<span style=\"font-weight: bold\">Archivi          </span>  2 <span style=\"color: #7f7f7f; text-decoration-color: #7f7f7f\"> \u2192 Archivi/         </span>", "<span style=\"font-weight: bold\">Audio            </span>  2 <span style=\"color: #7f7f7f; text-decoration-color: #7f7f7f\"> \u2192 Audio/           </span>", "<span style=\"font-weight: bold\">Presentazioni    </span>  1 <span style=\"color: #7f7f7f; text-decoration-color: #7f7f7f\"> \u2192 Presentazioni/   </span>", "<span style=\"font-weight: bold\">Video            </span>  1 <span style=\"color: #7f7f7f; text-decoration-color: #7f7f7f\"> \u2192 Video/           </span>", "", "<span style=\"font-weight: bold\">5</span> duplicati (456,6 KB) \u2192 Duplicates/", "", "<span style=\"font-style: italic\">Fatture                                                                                  </span>", "\u250f\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2533\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2533\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2533\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2533\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2513", "\u2503<span style=\"color: #7f7f7f; text-decoration-color: #7f7f7f\"> Stato            </span>\u2503<span style=\"color: #7f7f7f; text-decoration-color: #7f7f7f\"> Fornitore                       </span>\u2503<span style=\"color: #7f7f7f; text-decoration-color: #7f7f7f\"> Numero   </span>\u2503<span style=\"color: #7f7f7f; text-decoration-color: #7f7f7f\"> Data       </span>\u2503<span style=\"color: #7f7f7f; text-decoration-color: #7f7f7f\">   Totale </span>\u2503", "\u2521\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2547\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2547\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2547\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2547\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2529", "\u2502 <span style=\"color: #008000; text-decoration-color: #008000\">\u25cf OK</span>             \u2502 Elettroforniture Bianchi S.p.A. \u2502 FT-7731  \u2502 2026-10-25 \u2502 \u20ac 322,08 \u2502", "\u2502 <span style=\"color: #008000; text-decoration-color: #008000\">\u25cf OK</span>             \u2502 Elettroforniture Bianchi S.p.A. \u2502 FT-7802  \u2502 2026-11-13 \u2502 \u20ac 614,88 \u2502", "\u2502 <span style=\"color: #008000; text-decoration-color: #008000\">\u25cf OK</span>             \u2502 Bright Cloud Ltd                \u2502 BC-55821 \u2502 2026-10-18 \u2502  \u20ac 84,00 \u2502", "\u2502 <span style=\"color: #008000; text-decoration-color: #008000\">\u25cf OK</span>             \u2502 Studio Verdi Consulenze         \u2502 41       \u2502 2026-09-28 \u2502 \u20ac 976,00 \u2502", "\u2502 <span style=\"color: #808000; text-decoration-color: #808000\">\u25b2 Da controllare</span> \u2502 Tipografia Rossi S.r.l.         \u2502 2026/140 \u2502 2026-11-16 \u2502 \u20ac 266,20 \u2502", "\u2502 <span style=\"color: #008000; text-decoration-color: #008000\">\u25cf OK</span>             \u2502 Tipografia Rossi S.r.l.         \u2502 2026/131 \u2502 2026-11-07 \u2502 \u20ac 372,10 \u2502", "\u2502 <span style=\"color: #008000; text-decoration-color: #008000\">\u25cf OK</span>             \u2502 Tipografia Rossi S.r.l.         \u2502 2026/118 \u2502 2026-10-10 \u2502 \u20ac 835,70 \u2502", "\u2502 <span style=\"color: #008000; text-decoration-color: #008000\">\u25cf OK</span>             \u2502 Bright Cloud Ltd                \u2502 BC-56010 \u2502 2026-11-17 \u2502 \u20ac 132,00 \u2502", "\u2502 <span style=\"color: #008000; text-decoration-color: #008000\">\u25cf OK</span>             \u2502 Studio Verdi Consulenze         \u2502 47       \u2502 2026-10-30 \u2502 \u20ac 732,00 \u2502", "\u2502 <span style=\"color: #800000; text-decoration-color: #800000\">\u2716 Illeggibile</span>    \u2502 <span style=\"color: #7f7f7f; text-decoration-color: #7f7f7f\">scan_fornitore.pdf</span>              \u2502 \u2014        \u2502 \u2014          \u2502        \u2014 \u2502", "\u2514\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2534\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2534\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2534\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2534\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2518", "Totale fatturato: <span style=\"font-weight: bold\">\u20ac 4.334,96</span>   <span style=\"color: #808000; text-decoration-color: #808000\">\u25b2 2 da controllare</span>", "", "<span style=\"font-weight: bold\">9</span> fatture rinominate, es. <span style=\"color: #7f7f7f; text-decoration-color: #7f7f7f\">FT7731.pdf</span> \u2192 <span style=\"color: #008080; text-decoration-color: #008080\">2026-10-25_elettroforniture-bianchi-s-p-a_ft-7731.pdf</span>", "Report: <a href=\"report-it.html\">~/Downloads/Report Ordo/ordo-report-2026-11-22_060031.html</a>", "Report: <a href=\"report-it.xlsx\">~/Downloads/Report Ordo/ordo-report-2026-11-22_060031.xlsx</a>", ""], "en": ["<span style=\"color: #7f7f7f; text-decoration-color: #7f7f7f\">\u256d\u2500\u2500\u2500 Ordo \u2500\u2500\u2500\u2500\u256e</span>", "<span style=\"color: #7f7f7f; text-decoration-color: #7f7f7f\">\u2502</span> <span style=\"font-weight: bold\">~/Downloads</span> <span style=\"color: #7f7f7f; text-decoration-color: #7f7f7f\">\u2502</span>", "<span style=\"color: #7f7f7f; text-decoration-color: #7f7f7f\">\u2570\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u256f</span>", "<span style=\"font-weight: bold\">Images        </span> 22 <span style=\"color: #7f7f7f; text-decoration-color: #7f7f7f\"> \u2192 Images/       </span>", "<span style=\"font-weight: bold\">Invoices      </span> 10 <span style=\"color: #7f7f7f; text-decoration-color: #7f7f7f\"> \u2192 Invoices/     </span>", "<span style=\"font-weight: bold\">Documents     </span>  8 <span style=\"color: #7f7f7f; text-decoration-color: #7f7f7f\"> \u2192 Documents/    </span>", "<span style=\"font-weight: bold\">Duplicates    </span>  5 <span style=\"color: #7f7f7f; text-decoration-color: #7f7f7f\"> \u2192 Duplicates/   </span>", "<span style=\"font-weight: bold\">Spreadsheets  </span>  3 <span style=\"color: #7f7f7f; text-decoration-color: #7f7f7f\"> \u2192 Spreadsheets/ </span>", "<span style=\"font-weight: bold\">Code          </span>  3 <span style=\"color: #7f7f7f; text-decoration-color: #7f7f7f\"> \u2192 Code/         </span>", "<span style=\"font-weight: bold\">Installers    </span>  2 <span style=\"color: #7f7f7f; text-decoration-color: #7f7f7f\"> \u2192 Installers/   </span>", "<span style=\"font-weight: bold\">Other         </span>  2 <span style=\"color: #7f7f7f; text-decoration-color: #7f7f7f\"> \u2192 Other/        </span>", "<span style=\"font-weight: bold\">Archives      </span>  2 <span style=\"color: #7f7f7f; text-decoration-color: #7f7f7f\"> \u2192 Archives/     </span>", "<span style=\"font-weight: bold\">Audio         </span>  2 <span style=\"color: #7f7f7f; text-decoration-color: #7f7f7f\"> \u2192 Audio/        </span>", "<span style=\"font-weight: bold\">Presentations </span>  1 <span style=\"color: #7f7f7f; text-decoration-color: #7f7f7f\"> \u2192 Presentations/</span>", "<span style=\"font-weight: bold\">Video         </span>  1 <span style=\"color: #7f7f7f; text-decoration-color: #7f7f7f\"> \u2192 Video/        </span>", "", "<span style=\"font-weight: bold\">5</span> duplicates (456.6 KB) \u2192 Duplicates/", "", "<span style=\"font-style: italic\">Invoices                                                                             </span>", "\u250f\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2533\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2533\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2533\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2533\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2513", "\u2503<span style=\"color: #7f7f7f; text-decoration-color: #7f7f7f\"> Status       </span>\u2503<span style=\"color: #7f7f7f; text-decoration-color: #7f7f7f\"> Supplier                        </span>\u2503<span style=\"color: #7f7f7f; text-decoration-color: #7f7f7f\"> Number   </span>\u2503<span style=\"color: #7f7f7f; text-decoration-color: #7f7f7f\"> Date       </span>\u2503<span style=\"color: #7f7f7f; text-decoration-color: #7f7f7f\">    Total </span>\u2503", "\u2521\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2547\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2547\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2547\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2547\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2529", "\u2502 <span style=\"color: #008000; text-decoration-color: #008000\">\u25cf OK</span>         \u2502 Elettroforniture Bianchi S.p.A. \u2502 FT-7731  \u2502 2026-10-25 \u2502 \u20ac 322.08 \u2502", "\u2502 <span style=\"color: #008000; text-decoration-color: #008000\">\u25cf OK</span>         \u2502 Elettroforniture Bianchi S.p.A. \u2502 FT-7802  \u2502 2026-11-13 \u2502 \u20ac 614.88 \u2502", "\u2502 <span style=\"color: #008000; text-decoration-color: #008000\">\u25cf OK</span>         \u2502 Bright Cloud Ltd                \u2502 BC-55821 \u2502 2026-10-18 \u2502  \u20ac 84.00 \u2502", "\u2502 <span style=\"color: #008000; text-decoration-color: #008000\">\u25cf OK</span>         \u2502 Studio Verdi Consulenze         \u2502 41       \u2502 2026-09-28 \u2502 \u20ac 976.00 \u2502", "\u2502 <span style=\"color: #808000; text-decoration-color: #808000\">\u25b2 To check</span>   \u2502 Tipografia Rossi S.r.l.         \u2502 2026/140 \u2502 2026-11-16 \u2502 \u20ac 266.20 \u2502", "\u2502 <span style=\"color: #008000; text-decoration-color: #008000\">\u25cf OK</span>         \u2502 Tipografia Rossi S.r.l.         \u2502 2026/131 \u2502 2026-11-07 \u2502 \u20ac 372.10 \u2502", "\u2502 <span style=\"color: #008000; text-decoration-color: #008000\">\u25cf OK</span>         \u2502 Tipografia Rossi S.r.l.         \u2502 2026/118 \u2502 2026-10-10 \u2502 \u20ac 835.70 \u2502", "\u2502 <span style=\"color: #008000; text-decoration-color: #008000\">\u25cf OK</span>         \u2502 Bright Cloud Ltd                \u2502 BC-56010 \u2502 2026-11-17 \u2502 \u20ac 132.00 \u2502", "\u2502 <span style=\"color: #008000; text-decoration-color: #008000\">\u25cf OK</span>         \u2502 Studio Verdi Consulenze         \u2502 47       \u2502 2026-10-30 \u2502 \u20ac 732.00 \u2502", "\u2502 <span style=\"color: #800000; text-decoration-color: #800000\">\u2716 Unreadable</span> \u2502 <span style=\"color: #7f7f7f; text-decoration-color: #7f7f7f\">scan_fornitore.pdf</span>              \u2502 \u2014        \u2502 \u2014          \u2502        \u2014 \u2502", "\u2514\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2534\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2534\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2534\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2534\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2518", "Total invoiced: <span style=\"font-weight: bold\">\u20ac 4,334.96</span>   <span style=\"color: #808000; text-decoration-color: #808000\">\u25b2 2 to review</span>", "", "<span style=\"font-weight: bold\">9</span> invoices renamed, e.g. <span style=\"color: #7f7f7f; text-decoration-color: #7f7f7f\">FT7731.pdf</span> \u2192 <span style=\"color: #008080; text-decoration-color: #008080\">2026-10-25_elettroforniture-bianchi-s-p-a_ft-7731.pdf</span>", "Report: <a href=\"report-en.html\">~/Downloads/Ordo reports/ordo-report-2026-11-22_060034.html</a>", "Report: <a href=\"report-en.xlsx\">~/Downloads/Ordo reports/ordo-report-2026-11-22_060034.xlsx</a>", ""]};
+const TEXT = {
+  it: {
+    kicker: 'Automazione Python · demo personale',
+    h1: 'Ordo riordina una cartella in disordine<br />e trasforma le fatture PDF in Excel.',
+    lead: 'Un solo comando smista 61 file in cartelle, mette da parte i duplicati, legge 10 fatture di fornitori (in italiano e in inglese), le rinomina come <code>data_fornitore_numero.pdf</code>, segnala quelle da controllare e scrive un report. Qui sotto un\'esecuzione vera, riprodotta.',
+    replay: '↻ Ripeti', open: 'Apri il report generato ↗', excel: 'Scarica il file Excel', code: 'Codice su GitHub ↗',
+    f1t: 'Organizza', f1: 'File smistati per tipo (e per mese, se vuoi). Duplicati trovati dal contenuto, non dal nome.',
+    f2t: 'Rinomina', f2: 'Rinomina in blocco con schemi come <code>{date}_{name}</code> o <code>foto_{n:03}</code>, con anteprima.',
+    f3t: 'Legge le fatture', f3: 'Fornitore, numero, data, partita IVA, imponibile, IVA e totale dai PDF. I totali vengono verificati.',
+    f4t: 'Report e annulla', f4: 'Report HTML + Excel. Niente cambia senza <code>--apply</code>, e <code>ordo undo</code> rimette tutto a posto.',
+    wint: 'Anche con una finestra', win: 'Per chi non apre mai un terminale: lo stesso motore con una semplice interfaccia Tkinter. Anteprima, applica, annulla.',
+    foot: 'Ordo è un progetto dimostrativo di <a href="https://cristiancasciani.github.io/">Cristian Casciani</a>. Aziende e fatture sono inventate. Python · pypdf · openpyxl · rich · Tkinter.',
+    cmd: 'ordo --lang it run ~/Downloads --apply', title: 'Ordo — demo di automazione Python · Cristian Casciani',
+  },
+  en: {},
+};
+// English texts are the ones already in the HTML: read them once.
+document.querySelectorAll('[data-i18n]').forEach((el) => (TEXT.en[el.dataset.i18n] = el.textContent));
+document.querySelectorAll('[data-i18n-html]').forEach((el) => (TEXT.en[el.dataset.i18nHtml] = el.innerHTML));
+TEXT.en.cmd = 'ordo run ~/Downloads --apply';
+TEXT.en.title = document.title;
+let lang = localStorage.getItem('ordo-lang') || (navigator.language || 'en').slice(0, 2);
+if (!TEXT[lang]) lang = 'en';
+function setLang(next) {
+  lang = next;
+  localStorage.setItem('ordo-lang', lang);
+  document.documentElement.lang = lang;
+  document.title = TEXT[lang].title;
+  document.querySelectorAll('[data-i18n]').forEach((el) => (el.textContent = TEXT[lang][el.dataset.i18n]));
+  document.querySelectorAll('[data-i18n-html]').forEach((el) => (el.innerHTML = TEXT[lang][el.dataset.i18nHtml]));
+  document.querySelectorAll('[data-lang]').forEach((b) => b.setAttribute('aria-pressed', String(b.dataset.lang === lang)));
+  document.getElementById('rep-html').href = `report-${lang}.html`;
+  document.getElementById('rep-xlsx').href = `report-${lang}.xlsx`;
+  document.getElementById('shot').src = `gui-${lang}.png`;
+  if (started) play();
+}
+let started = false;
+document.querySelectorAll('[data-lang]').forEach((b) => b.addEventListener('click', () => setLang(b.dataset.lang)));
+const screen = document.getElementById('screen');
+const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+let token = 0;
+const wait = (ms) => new Promise((r) => setTimeout(r, ms));
+async function play() {
+  started = true;
+  const me = ++token;
+  const CMD = TEXT[lang].cmd;
+  const lines = LINES[lang];
+  screen.innerHTML = '<span class="prompt">~ $</span> <span class="cmd"></span><span class="cursor"></span>';
+  const cmd = screen.querySelector('.cmd');
+  if (reduce) { cmd.textContent = CMD; screen.querySelector('.cursor').remove(); screen.insertAdjacentHTML('beforeend', '\n' + lines.join('\n')); return; }
+  await wait(600);
+  for (const ch of CMD) { if (me !== token) return; cmd.textContent += ch; await wait(45 + Math.random() * 60); }
+  await wait(450);
+  screen.querySelector('.cursor').remove();
+  screen.insertAdjacentHTML('beforeend', '\n');
+  for (const line of lines) {
+    if (me !== token) return;
+    screen.insertAdjacentHTML('beforeend', line + '\n');
+    screen.scrollTop = screen.scrollHeight;
+    await wait(line.trim() ? 55 : 120);
+  }
+  screen.insertAdjacentHTML('beforeend', '<span class="prompt">~ $</span> <span class="cursor"></span>');
+}
+document.getElementById('replay').addEventListener('click', play);
+setLang(lang);
+new IntersectionObserver((e, o) => { if (e[0].isIntersecting) { play(); o.disconnect(); } }).observe(screen);
+</script>
+</body>
+</html>

@@ -1,0 +1,24 @@
+[project]
+name = "ordo"
+version = "1.0.0"
+description = "Tidy a folder, rename files in bulk, read PDF invoices and write a report."
+readme = "README.md"
+requires-python = ">=3.10"
+authors = [{ name = "Cristian Casciani" }]
+dependencies = ["pypdf>=5", "openpyxl>=3.1", "rich>=13"]
+
+[project.optional-dependencies]
+dev = ["pytest", "fpdf2"]
+
+[project.scripts]
+ordo = "ordo.cli:main"
+
+[project.gui-scripts]
+ordo-gui = "ordo.gui:main"
+
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools]
+packages = ["ordo"]
